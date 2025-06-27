@@ -2,48 +2,50 @@
 // Desarrollado por: Tom Lips & VipTrader
 
 class BitcoinDashboard {
-    constructor() {
+    constructor(containerId = null) {
         this.btcATH = 111814.00; // ATH fijo del 22 mayo
         this.updateInterval = 35 * 60 * 1000; // 35 minutos
+        this.instanceId = Math.random().toString(36).substr(2, 9);
+        this.containerId = containerId;
         this.init();
     }
 
     // Crear los estilos CSS
     createStyles() {
         const styles = `
-            .bitcoin-dashboard {
+            .bitcoin-dashboard-widget {
                 font-family: 'Arial', sans-serif;
-                padding: 20px;
-                background-color: #f0f0f0;
-                color: #333;
                 width: 100%;
+                max-width: 100%;
+                padding: 20px;
                 box-sizing: border-box;
+                color: #333;
+                background-color: #f0f0f0;
+                border-radius: 8px;
             }
-            .bitcoin-dashboard .container {
+            .bitcoin-dashboard-widget .container {
                 display: flex;
                 justify-content: center;
-                max-width: 100%;
                 width: 100%;
                 margin: 0 auto;
                 flex-wrap: wrap;
                 gap: 10px;
             }
-            .bitcoin-dashboard .chart {
+            .bitcoin-dashboard-widget .chart {
                 text-align: center;
                 padding: 0;
                 margin: 0 1px;
                 flex: 1;
-                min-width: 120px;
+                min-width: 45px;
                 position: relative;
             }
-            .bitcoin-dashboard .chart-label {
+            .bitcoin-dashboard-widget .chart-label {
                 font-size: 1.1rem;
                 margin-bottom: 5px;
                 position: relative;
                 font-weight: 500;
-                word-wrap: break-word;
             }
-            .bitcoin-dashboard .chart-label::after {
+            .bitcoin-dashboard-widget .chart-label::after {
                 content: '';
                 position: absolute;
                 bottom: -3px;
@@ -52,7 +54,7 @@ class BitcoinDashboard {
                 height: 1px;
                 background-color: #bbb;
             }
-            .bitcoin-dashboard .bar-container {
+            .bitcoin-dashboard-widget .bar-container {
                 height: 280px;
                 position: relative;
                 border-left: 1px solid #bbb;
@@ -61,7 +63,7 @@ class BitcoinDashboard {
                 display: flex;
                 justify-content: center;
             }
-            .bitcoin-dashboard .bar {
+            .bitcoin-dashboard-widget .bar {
                 position: absolute;
                 bottom: 0;
                 width: 30%;
@@ -71,10 +73,10 @@ class BitcoinDashboard {
                 transition: height 0.5s ease;
                 border-radius: 3px;
             }
-            .bitcoin-dashboard .bar.blue {
+            .bitcoin-dashboard-widget .bar.blue {
                 background-color: #0066cc;
             }
-            .bitcoin-dashboard .y-axis {
+            .bitcoin-dashboard-widget .y-axis {
                 position: absolute;
                 left: 0;
                 width: 60px;
@@ -83,25 +85,22 @@ class BitcoinDashboard {
                 top: 0;
                 height: 100%;
             }
-            .bitcoin-dashboard .y-axis span {
+            .bitcoin-dashboard-widget .y-axis span {
                 display: block;
                 height: 56px;
                 line-height: 56px;
                 white-space: nowrap;
             }
-            .bitcoin-dashboard .value {
+            .bitcoin-dashboard-widget .value {
                 display: none;
             }
-            .bitcoin-dashboard .info {
+            .bitcoin-dashboard-widget .info {
                 margin-top: 5px;
                 font-size: 0.75rem;
                 color: #555;
-                white-space: normal;
-                word-wrap: break-word;
-                text-align: center;
-                line-height: 1.3;
+                white-space: nowrap;
             }
-            .bitcoin-dashboard .summary {
+            .bitcoin-dashboard-widget .summary {
                 margin-top: 15px;
                 padding: 12px;
                 background-color: #ffffff;
@@ -111,14 +110,13 @@ class BitcoinDashboard {
                 font-size: 0.9rem;
                 box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
             }
-            .bitcoin-dashboard .update-info {
+            .bitcoin-dashboard-widget .update-info {
                 margin-top: 10px;
                 font-size: 0.8rem;
                 text-align: center;
                 color: #666;
-                word-wrap: break-word;
             }
-            .bitcoin-dashboard .disclaimer {
+            .bitcoin-dashboard-widget .disclaimer {
                 margin-top: 10px;
                 padding: 10px;
                 background-color: #fff3e6;
@@ -128,7 +126,7 @@ class BitcoinDashboard {
                 text-align: center;
                 color: #744700;
             }
-            .bitcoin-dashboard .viptrend-info {
+            .bitcoin-dashboard-widget .viptrend-info {
                 margin-top: 10px;
                 padding: 10px;
                 background-color: #000;
@@ -139,13 +137,13 @@ class BitcoinDashboard {
                 color: #fff;
                 font-weight: normal;
             }
-            .bitcoin-dashboard .viptrend-info h3 {
+            .bitcoin-dashboard-widget .viptrend-info h3 {
                 margin: 0 0 5px 0;
                 font-size: 0.9rem;
                 font-weight: 500;
                 color: #ddd;
             }
-            .bitcoin-dashboard .authors {
+            .bitcoin-dashboard-widget .authors {
                 margin-top: 15px;
                 padding: 10px;
                 background-color: #e6f3ff;
@@ -155,49 +153,33 @@ class BitcoinDashboard {
                 text-align: center;
                 color: #004d99;
             }
-            @media (max-width: 768px) {
-                .bitcoin-dashboard .container {
+            @media (max-width: 600px) {
+                .bitcoin-dashboard-widget .container {
                     flex-direction: column;
                     align-items: center;
                 }
-                .bitcoin-dashboard .chart {
-                    min-width: 200px;
-                    margin-bottom: 20px;
+                .bitcoin-dashboard-widget .chart {
                     width: 100%;
                     max-width: 300px;
+                    margin-bottom: 20px;
                 }
-                .bitcoin-dashboard .bar-container {
-                    min-width: 200px;
+                .bitcoin-dashboard-widget .bar-container {
+                    height: 200px;
                 }
-                .bitcoin-dashboard .bar {
-                    width: 25%;
-                }
-                .bitcoin-dashboard .y-axis {
+                .bitcoin-dashboard-widget .y-axis {
                     width: 50px;
                     font-size: 0.7rem;
                 }
-                .bitcoin-dashboard .chart-label {
-                    font-size: 1rem;
-                }
-                .bitcoin-dashboard .info {
-                    font-size: 0.8rem;
-                }
-            }
-            @media (max-width: 600px) {
-                .bitcoin-dashboard .container {
-                    flex-direction: column;
-                }
-                .bitcoin-dashboard .chart {
-                    min-width: 180px;
-                    margin-bottom: 15px;
-                }
-                .bitcoin-dashboard .bar-container {
-                    min-width: 180px;
-                    height: 200px;
-                }
-                .bitcoin-dashboard .y-axis span {
+                .bitcoin-dashboard-widget .y-axis span {
                     height: 40px;
                     line-height: 40px;
+                }
+                .bitcoin-dashboard-widget .chart-label {
+                    font-size: 0.9rem;
+                }
+                .bitcoin-dashboard-widget .info {
+                    font-size: 0.7rem;
+                    white-space: normal;
                 }
             }
         `;
@@ -208,28 +190,13 @@ class BitcoinDashboard {
     }
 
     // Crear la estructura HTML
-    createHTML(containerId = null) {
-        // Configurar el viewport solo si no existe
-        if (!document.querySelector('meta[name="viewport"]')) {
-            const viewport = document.createElement('meta');
-            viewport.name = 'viewport';
-            viewport.content = 'width=device-width, initial-scale=1.0';
-            document.head.appendChild(viewport);
-        }
-
-        // Configurar charset solo si no existe
-        if (!document.querySelector('meta[charset]')) {
-            const charset = document.createElement('meta');
-            charset.setAttribute('charset', 'UTF-8');
-            document.head.appendChild(charset);
-        }
-
-        const dashboardHTML = `
-            <div class="bitcoin-dashboard">
+    createHTML(container) {
+        container.innerHTML = `
+            <div class="bitcoin-dashboard-widget">
                 <div class="container">
                     <!-- Gráfico 1: Máximo Histórico (ATH) -->
                     <div class="chart">
-                        <div class="chart-label">ATH<br>(22 mayo)</div>
+                        <div class="chart-label">ATH (22 mayo)</div>
                         <div class="bar-container">
                             <div class="y-axis">
                                 <span>$120,000</span>
@@ -238,36 +205,36 @@ class BitcoinDashboard {
                                 <span>$90,000</span>
                                 <span>$80,000</span>
                             </div>
-                            <div class="bar" id="ath-bar" style="height: 0%;"></div>
-                            <div class="value" id="ath-value">Cargando...</div>
+                            <div class="bar" id="ath-bar-${this.instanceId}" style="height: 0%;"></div>
+                            <div class="value" id="ath-value-${this.instanceId}">Cargando...</div>
                         </div>
-                        <div class="info" id="ath-price">Máximo Histórico:<br>${this.btcATH.toFixed(2)}</div>
+                        <div class="info" id="ath-price-${this.instanceId}">Máximo Histórico: ${this.btcATH.toFixed(2)}</div>
                     </div>
 
                     <!-- Gráfico 2: Precio Actual de Bitcoin -->
                     <div class="chart">
-                        <div class="chart-label">BTC<br>Hoy</div>
+                        <div class="chart-label">BTC Hoy</div>
                         <div class="bar-container">
-                            <div class="bar blue" id="price-bar" style="height: 0%;"></div>
+                            <div class="bar blue" id="price-bar-${this.instanceId}" style="height: 0%;"></div>
                         </div>
-                        <div class="info" id="btc-price">Precio:<br>Cargando...</div>
+                        <div class="info" id="btc-price-${this.instanceId}">Precio: Cargando...</div>
                     </div>
 
                     <!-- Gráfico 3: PREVISIÓN -->
                     <div class="chart">
                         <div class="chart-label">PREVISIÓN</div>
                         <div class="bar-container">
-                            <div class="bar" id="combined-bar" style="height: 0%;"></div>
+                            <div class="bar" id="combined-bar-${this.instanceId}" style="height: 0%;"></div>
                         </div>
-                        <div class="info">Según indicador<br>VipTrend-Bitcoin</div>
+                        <div class="info">Según indicador VipTrend-Bitcoin</div>
                     </div>
                 </div>
 
                 <!-- Resumen Comentado -->
-                <div class="summary" id="summary">Cargando resumen...</div>
+                <div class="summary" id="summary-${this.instanceId}">Cargando resumen...</div>
 
                 <!-- Información de actualización -->
-                <div class="update-info" id="update-info">Cargando información de actualización...</div>
+                <div class="update-info" id="update-info-${this.instanceId}">Cargando información de actualización...</div>
 
                 <!-- Descargo de Responsabilidad -->
                 <div class="disclaimer">Descargo de Responsabilidad: Esto es un ejemplo educativo y nunca se tomará para trading ni inversiones</div>
@@ -284,19 +251,6 @@ class BitcoinDashboard {
                 </div>
             </div>
         `;
-
-        // Si se especifica un contenedor, insertarlo ahí; si no, en el body
-        if (containerId) {
-            const container = document.getElementById(containerId);
-            if (container) {
-                container.innerHTML = dashboardHTML;
-            } else {
-                console.error(`Contenedor con ID '${containerId}' no encontrado`);
-                document.body.innerHTML = dashboardHTML;
-            }
-        } else {
-            document.body.innerHTML = dashboardHTML;
-        }
     }
 
     // Función para obtener datos de Bitcoin y Bitcoin Cash
@@ -346,16 +300,15 @@ class BitcoinDashboard {
             }
 
             // Actualizar gráficos
-            document.getElementById('ath-bar').style.height = `${athBarHeight}%`;
-            document.getElementById('ath-value').textContent = `$${this.btcATH.toFixed(2)}`;
-            document.getElementById('ath-price').textContent = `Máximo Histórico:\n${this.btcATH.toFixed(2)}`;
-            document.getElementById('ath-price').innerHTML = `Máximo Histórico:<br>${this.btcATH.toFixed(2)}`;
+            document.getElementById(`ath-bar-${this.instanceId}`).style.height = `${athBarHeight}%`;
+            document.getElementById(`ath-value-${this.instanceId}`).textContent = `${this.btcATH.toFixed(2)}`;
+            document.getElementById(`ath-price-${this.instanceId}`).textContent = `Máximo Histórico: ${this.btcATH.toFixed(2)}`;
 
-            document.getElementById('price-bar').style.height = `${priceBarHeight}%`;
-            document.getElementById('btc-price').innerHTML = `Precio:<br>${btcPrice.toFixed(2)}`;
+            document.getElementById(`price-bar-${this.instanceId}`).style.height = `${priceBarHeight}%`;
+            document.getElementById(`btc-price-${this.instanceId}`).textContent = `Precio: ${btcPrice.toFixed(2)}`;
 
-            document.getElementById('combined-bar').style.height = `${combinedBarHeight}%`;
-            document.getElementById('combined-bar').style.backgroundColor = combinedChange >= 0 ? '#00cc00' : '#cc0000';
+            document.getElementById(`combined-bar-${this.instanceId}`).style.height = `${combinedBarHeight}%`;
+            document.getElementById(`combined-bar-${this.instanceId}`).style.backgroundColor = combinedChange >= 0 ? '#00cc00' : '#cc0000';
 
             // Generar Resumen Comentado dinámico
             let summaryText = '';
@@ -377,23 +330,23 @@ class BitcoinDashboard {
                 }
             }
 
-            document.getElementById('summary').textContent = `Resumen Comentado: ${summaryText}`;
+            document.getElementById(`summary-${this.instanceId}`).textContent = `Resumen Comentado: ${summaryText}`;
 
             // Calcular y mostrar información de actualización
             const now = new Date();
             const lastUpdate = now.toLocaleTimeString('es-ES', { timeZone: 'CET', hour: '2-digit', minute: '2-digit' }) + ' CEST';
             const nextUpdate = new Date(now.getTime() + this.updateInterval).toLocaleTimeString('es-ES', { timeZone: 'CET', hour: '2-digit', minute: '2-digit' }) + ' CEST';
-            document.getElementById('update-info').textContent = `Actualiza cada 35 minutos | Última actualización: ${lastUpdate} | Próxima actualización: ${nextUpdate}`;
+            document.getElementById(`update-info-${this.instanceId}`).textContent = `Actualiza cada 35 minutos | Última actualización: ${lastUpdate} | Próxima actualización: ${nextUpdate}`;
 
             console.log(`BTC Price: $${btcPrice}, BCH Change: ${bchChange24h}%, Adjusted: ${adjustedBchChange}%, Combined Price: $${combinedPrice.toFixed(2)}, Heights: ATH=${athBarHeight}%, BTC=${priceBarHeight}%, Combined=${combinedBarHeight}%`);
 
         } catch (error) {
             console.error('Error detallado:', error.message);
-            document.getElementById('ath-value').textContent = 'Error';
-            document.getElementById('ath-price').innerHTML = 'Máximo Histórico:<br>Error';
-            document.getElementById('btc-price').innerHTML = 'Precio:<br>Error';
-            document.getElementById('summary').textContent = `Resumen Comentado: Error al cargar datos - ${error.message}`;
-            document.getElementById('update-info').textContent = 'Información de actualización: Error';
+            document.getElementById(`ath-value-${this.instanceId}`).textContent = 'Error';
+            document.getElementById(`ath-price-${this.instanceId}`).textContent = 'Máximo Histórico: Error';
+            document.getElementById(`btc-price-${this.instanceId}`).textContent = 'Precio: Error';
+            document.getElementById(`summary-${this.instanceId}`).textContent = `Resumen Comentado: Error al cargar datos - ${error.message}`;
+            document.getElementById(`update-info-${this.instanceId}`).textContent = 'Información de actualización: Error';
         }
     }
 
@@ -402,32 +355,49 @@ class BitcoinDashboard {
         // Esperar a que el DOM esté listo
         if (document.readyState === 'loading') {
             document.addEventListener('DOMContentLoaded', () => {
-                this.createStyles();
-                this.createHTML();
-                this.obtenerDatosCripto();
-                setInterval(() => this.obtenerDatosCripto(), this.updateInterval);
+                this.setup();
             });
         } else {
-            this.createStyles();
-            this.createHTML();
-            this.obtenerDatosCripto();
-            setInterval(() => this.obtenerDatosCripto(), this.updateInterval);
+            this.setup();
         }
+    }
+
+    // Configurar el dashboard
+    setup() {
+        this.createStyles();
+        
+        // Determinar el contenedor
+        let container;
+        if (this.containerId) {
+            container = document.getElementById(this.containerId);
+            if (!container) {
+                console.error(`Contenedor con ID '${this.containerId}' no encontrado`);
+                return;
+            }
+        } else {
+            // Si no se especifica contenedor, usar el body
+            container = document.body;
+        }
+        
+        this.createHTML(container);
+        this.obtenerDatosCripto();
+        setInterval(() => this.obtenerDatosCripto(), this.updateInterval);
     }
 }
 
 // Función para inicializar manualmente si se necesita
-function initBitcoinDashboard() {
-    return new BitcoinDashboard();
+function initBitcoinDashboard(containerId = null) {
+    return new BitcoinDashboard(containerId);
 }
 
-// Auto-inicializar cuando se carga el script
+// Auto-inicializar cuando se carga el script solo si no hay contenedor específico
 if (typeof window !== 'undefined') {
-    const dashboard = new BitcoinDashboard();
-    
-    // Exportar para uso manual si se necesita
+    // Exportar para uso manual
     window.BitcoinDashboard = BitcoinDashboard;
     window.initBitcoinDashboard = initBitcoinDashboard;
+    
+    // Solo auto-inicializar si no se pasa un contenedor específico
+    // Esto permite mayor control sobre cuándo y dónde se inicializa
 }
 
 // Para uso en Node.js (opcional)
