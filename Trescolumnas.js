@@ -184,9 +184,13 @@ class BitcoinDashboard {
             }
         `;
 
-        const styleSheet = document.createElement('style');
-        styleSheet.textContent = styles;
-        document.head.appendChild(styleSheet);
+        // Evitar duplicar estilos
+        if (!document.getElementById(`bitcoin-dashboard-styles-${this.instanceId}`)) {
+            const styleSheet = document.createElement('style');
+            styleSheet.id = `bitcoin-dashboard-styles-${this.instanceId}`;
+            styleSheet.textContent = styles;
+            document.head.appendChild(styleSheet);
+        }
     }
 
     // Crear la estructura HTML
@@ -300,15 +304,26 @@ class BitcoinDashboard {
             }
 
             // Actualizar gráficos
-            document.getElementById(`ath-bar-${this.instanceId}`).style.height = `${athBarHeight}%`;
-            document.getElementById(`ath-value-${this.instanceId}`).textContent = `${this.btcATH.toFixed(2)}`;
-            document.getElementById(`ath-price-${this.instanceId}`).textContent = `Máximo Histórico: ${this.btcATH.toFixed(2)}`;
+            const athBar = document.getElementById(`ath-bar-${this.instanceId}`);
+            const priceBar = document.getElementById(`price-bar-${this.instanceId}`);
+            const combinedBar = document.getElementById(`combined-bar-${this.instanceId}`);
+            const athValue = document.getElementById(`ath-value-${this.instanceId}`);
+            const athPrice = document.getElementById(`ath-price-${this.instanceId}`);
+            const btcPriceElement = document.getElementById(`btc-price-${this.instanceId}`);
+            const summary = document.getElementById(`summary-${this.instanceId}`);
+            const updateInfo = document.getElementById(`update-info-${this.instanceId}`);
 
-            document.getElementById(`price-bar-${this.instanceId}`).style.height = `${priceBarHeight}%`;
-            document.getElementById(`btc-price-${this.instanceId}`).textContent = `Precio: ${btcPrice.toFixed(2)}`;
+            if (athBar) athBar.style.height = `${athBarHeight}%`;
+            if (athValue) athValue.textContent = `${this.btcATH.toFixed(2)}`;
+            if (athPrice) athPrice.textContent = `Máximo Histórico: ${this.btcATH.toFixed(2)}`;
 
-            document.getElementById(`combined-bar-${this.instanceId}`).style.height = `${combinedBarHeight}%`;
-            document.getElementById(`combined-bar-${this.instanceId}`).style.backgroundColor = combinedChange >= 0 ? '#00cc00' : '#cc0000';
+            if (priceBar) priceBar.style.height = `${priceBarHeight}%`;
+            if (btcPriceElement) btcPriceElement.textContent = `Precio: ${btcPrice.toFixed(2)}`;
+
+            if (combinedBar) {
+                combinedBar.style.height = `${combinedBarHeight}%`;
+                combinedBar.style.backgroundColor = combinedChange >= 0 ? '#00cc00' : '#cc0000';
+            }
 
             // Generar Resumen Comentado dinámico
             let summaryText = '';
@@ -330,23 +345,29 @@ class BitcoinDashboard {
                 }
             }
 
-            document.getElementById(`summary-${this.instanceId}`).textContent = `Resumen Comentado: ${summaryText}`;
+            if (summary) summary.textContent = `Resumen Comentado: ${summaryText}`;
 
             // Calcular y mostrar información de actualización
             const now = new Date();
             const lastUpdate = now.toLocaleTimeString('es-ES', { timeZone: 'CET', hour: '2-digit', minute: '2-digit' }) + ' CEST';
             const nextUpdate = new Date(now.getTime() + this.updateInterval).toLocaleTimeString('es-ES', { timeZone: 'CET', hour: '2-digit', minute: '2-digit' }) + ' CEST';
-            document.getElementById(`update-info-${this.instanceId}`).textContent = `Actualiza cada 35 minutos | Última actualización: ${lastUpdate} | Próxima actualización: ${nextUpdate}`;
+            if (updateInfo) updateInfo.textContent = `Actualiza cada 35 minutos | Última actualización: ${lastUpdate} | Próxima actualización: ${nextUpdate}`;
 
             console.log(`BTC Price: $${btcPrice}, BCH Change: ${bchChange24h}%, Adjusted: ${adjustedBchChange}%, Combined Price: $${combinedPrice.toFixed(2)}, Heights: ATH=${athBarHeight}%, BTC=${priceBarHeight}%, Combined=${combinedBarHeight}%`);
 
         } catch (error) {
             console.error('Error detallado:', error.message);
-            document.getElementById(`ath-value-${this.instanceId}`).textContent = 'Error';
-            document.getElementById(`ath-price-${this.instanceId}`).textContent = 'Máximo Histórico: Error';
-            document.getElementById(`btc-price-${this.instanceId}`).textContent = 'Precio: Error';
-            document.getElementById(`summary-${this.instanceId}`).textContent = `Resumen Comentado: Error al cargar datos - ${error.message}`;
-            document.getElementById(`update-info-${this.instanceId}`).textContent = 'Información de actualización: Error';
+            const athValue = document.getElementById(`ath-value-${this.instanceId}`);
+            const athPrice = document.getElementById(`ath-price-${this.instanceId}`);
+            const btcPriceElement = document.getElementById(`btc-price-${this.instanceId}`);
+            const summary = document.getElementById(`summary-${this.instanceId}`);
+            const updateInfo = document.getElementById(`update-info-${this.instanceId}`);
+            
+            if (athValue) athValue.textContent = 'Error';
+            if (athPrice) athPrice.textContent = 'Máximo Histórico: Error';
+            if (btcPriceElement) btcPriceElement.textContent = 'Precio: Error';
+            if (summary) summary.textContent = `Resumen Comentado: Error al cargar datos - ${error.message}`;
+            if (updateInfo) updateInfo.textContent = 'Información de actualización: Error';
         }
     }
 
@@ -390,14 +411,29 @@ function initBitcoinDashboard(containerId = null) {
     return new BitcoinDashboard(containerId);
 }
 
-// Auto-inicializar cuando se carga el script solo si no hay contenedor específico
+// Auto-inicializar cuando se carga el script
 if (typeof window !== 'undefined') {
     // Exportar para uso manual
     window.BitcoinDashboard = BitcoinDashboard;
     window.initBitcoinDashboard = initBitcoinDashboard;
     
-    // Solo auto-inicializar si no se pasa un contenedor específico
-    // Esto permite mayor control sobre cuándo y dónde se inicializa
+    // AUTO-INICIALIZAR: Buscar divs con id="ATH" y inicializar automáticamente
+    document.addEventListener('DOMContentLoaded', function() {
+        const athContainer = document.getElementById('ATH');
+        if (athContainer && !athContainer.hasAttribute('data-bitcoin-dashboard-initialized')) {
+            athContainer.setAttribute('data-bitcoin-dashboard-initialized', 'true');
+            new BitcoinDashboard('ATH');
+        }
+    });
+    
+    // Si el DOM ya está cargado, ejecutar inmediatamente
+    if (document.readyState !== 'loading') {
+        const athContainer = document.getElementById('ATH');
+        if (athContainer && !athContainer.hasAttribute('data-bitcoin-dashboard-initialized')) {
+            athContainer.setAttribute('data-bitcoin-dashboard-initialized', 'true');
+            new BitcoinDashboard('ATH');
+        }
+    }
 }
 
 // Para uso en Node.js (opcional)
