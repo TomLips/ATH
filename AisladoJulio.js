@@ -6,7 +6,7 @@
 
     class BitcoinDashboard {
         constructor(containerId) {
-            this.btcATH = 111.999.00;
+            this.btcATH = 116.800.00;
             this.updateInterval = 35 * 60 * 1000;
             this.instanceId = Math.random().toString(36).substr(2, 9);
             this.containerId = containerId;
